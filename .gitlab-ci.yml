@@ -1,0 +1,39 @@
+image: php:8.2
+
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  POSTGRES_DB: isi_burger
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: your_password
+
+services:
+  - postgres:latest
+
+before_script:
+  - apt-get update && apt-get install -y git unzip libpng-dev libonig-dev libxml2-dev
+  - docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
+  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  - cp .env.example .env
+  - php artisan key:generate
+  - composer install --optimize-autoloader --no-dev
+
+build:
+  stage: build
+  script:
+    - php artisan migrate --force
+
+test:
+  stage: test
+  script:
+    - ./vendor/bin/phpunit
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Deploying to production..."
+  only:
+    - master
