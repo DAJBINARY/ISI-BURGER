@@ -14,7 +14,7 @@ services:
   - postgres:latest
 
 before_script:
-  - apt-get update && apt-get install -y git unzip libpng-dev libonig-dev libxml2-dev
+  - apt-get update && apt-get install -y git unzip libpng-dev libonig-dev libxml2-dev libpq-dev
   - docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
   - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   - cp .env.example .env
