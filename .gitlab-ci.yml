@@ -8,7 +8,7 @@ stages:
 variables:
   POSTGRES_DB: isi_burger
   POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: your_password
+  POSTGRES_PASSWORD: passer
 
 services:
   - postgres:latest

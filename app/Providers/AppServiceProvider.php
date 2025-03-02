@@ -1,24 +1,30 @@
 <?php
 
-namespace App\Providers;
+namespace App\Notifications;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 
-class AppServiceProvider extends ServiceProvider
+class OrderConfirmed extends Notification
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
+    use Queueable;
+
+    public function __construct(public $order)
     {
-        //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
+    public function via($notifiable)
     {
-        //
+        return ['mail'];
+    }
+
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->line('Votre commande a été confirmée.')
+            ->action('Voir la commande', url('/orders/' . $this->order->id))
+            ->line('Merci pour votre confiance !');
     }
 }

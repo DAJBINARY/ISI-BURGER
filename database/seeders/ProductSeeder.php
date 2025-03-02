@@ -12,6 +12,12 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        \App\Models\Product::create([
+            'name' => 'Cheeseburger',
+            'price' => 5.99,
+            'description' => 'Un délicieux cheeseburger.',
+            'image' => 'cheeseburger.jpg',
+            'stock' => 10,
+        ]);
     }
 }
