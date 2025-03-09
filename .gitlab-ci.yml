@@ -1,39 +1,65 @@
-image: php:8.2
-
 stages:
-  - build
+  - install
   - test
+  - analysis
+  - build
   - deploy
 
 variables:
-  POSTGRES_DB: isi_burger
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: passer
+  APP_ENV: testing
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres_db
+  DB_PORT: 5432
+  DB_DATABASE: isi_burger
+  DB_USERNAME: laravel
+  DB_PASSWORD: passer
+  SONAR_HOST_URL: "http://sonarqube:9000"
+  SONAR_LOGIN: "your-sonarqube-token"
 
 services:
-  - postgres:latest
+  - name: postgres:latest
+    alias: postgres_db
+    command: [ "postgres", "-c", "fsync=off" ]
 
 before_script:
-  - apt-get update && apt-get install -y git unzip libpng-dev libonig-dev libxml2-dev libpq-dev
-  - docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
-  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   - cp .env.example .env
+  - composer install --prefer-dist --no-interaction
   - php artisan key:generate
-  - composer install --optimize-autoloader --no-dev
+  - php artisan migrate --force
+  - php artisan config:clear
 
-build:
-  stage: build
+install_dependencies:
+  stage: install
   script:
-    - php artisan migrate --force
+    - echo "Installation terminée"
 
-test:
+unit_tests:
   stage: test
   script:
-    - ./vendor/bin/phpunit
+    - vendor/bin/phpunit --coverage-clover coverage.xml
+  artifacts:
+    paths:
+      - coverage.xml
+    expire_in: 1 week
+
+sonarqube_analysis:
+  stage: analysis
+  image: sonarsource/sonar-scanner-cli
+  script:
+    - sonar-scanner -Dsonar.projectKey=isi_burger -Dsonar.sources=app -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_LOGIN
+  dependencies:
+    - unit_tests
+
+build_docker:
+  stage: build
+  script:
+    - docker build -t laravel_app:latest .
+  only:
+    - main
 
 deploy:
   stage: deploy
   script:
-    - echo "Deploying to production..."
+    - echo "Déploiement automatique en cours..."
   only:
-    - master
+    - main
