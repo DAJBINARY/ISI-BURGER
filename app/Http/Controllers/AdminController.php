@@ -2,18 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\Product;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    public function dashboard()
+    public function statistics()
     {
-        $ordersToday = Order::whereDate('created_at', today())->count();
-        $revenueToday = Order::whereDate('created_at', today())->sum('total_amount');
-        $products = Product::all();
-
-        return view('admin.dashboard', compact('ordersToday', 'revenueToday', 'products'));
+        // Logic pour afficher les statistiques
+        return view('admin.statistics');
     }
 }

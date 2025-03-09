@@ -11,7 +11,7 @@ class OrderConfirmed extends Notification
 {
     use Queueable;
 
-    public function __construct(public $order)
+    public function __construct(public $commandes)
     {
     }
 
@@ -24,7 +24,7 @@ class OrderConfirmed extends Notification
     {
         return (new MailMessage)
             ->line('Votre commande a été confirmée.')
-            ->action('Voir la commande', url('/orders/' . $this->order->id))
+            ->action('Voir la commande', url('/commandes/' . $this->commandes->id))
             ->line('Merci pour votre confiance !');
     }
 }
