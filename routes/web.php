@@ -28,20 +28,6 @@ Route::get('/dashboard', function () {
     return redirect()->route('burgers.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Routes pour les clients
-Route::get('/catalogue', [ClientController::class, 'catalogue'])->name('client.catalogue');
-Route::get('/burger/{burger}', [ClientController::class, 'showBurger'])->name('client.burger');
-Route::post('/commande/passer', [ClientController::class, 'passerCommande'])->name('client.passerCommande');
-Route::get('/mes-commandes', [ClientController::class, 'mesCommandes'])->name('client.commandes');
-Route::delete('/supprimer-commande/{id}', [ClientController::class, 'supprimerCommande'])->name('client.supprimerCommande');
-
-
-
-// Routes pour le panier
-Route::get('/panier', [ClientController::class, 'afficherPanier'])->name('client.panier');
-Route::post('/ajouter-au-panier/{id}', [ClientController::class, 'ajouterAuPanier'])->name('client.ajouterAuPanier');
-Route::delete('/panier/supprimer/{id}', [ClientController::class, 'supprimerDuPanier'])->name('client.panier.supprimer');
-
 // Routes accessibles aux utilisateurs authentifiés
 Route::middleware('auth')->group(function () {
     // Gestion du profil utilisateur
@@ -60,5 +46,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/statistiques', [GestionnaireController::class, 'statistics'])->name('admin.statistics');
 
 });
+// Routes pour les clients
+Route::get('/catalogue', [ClientController::class, 'catalogue'])->name('client.catalogue');
+Route::get('/burger/{burger}', [ClientController::class, 'showBurger'])->name('client.burger');
+Route::post('/commande/passer', [ClientController::class, 'passerCommande'])->name('client.passerCommande');
+Route::get('/mes-commandes', [ClientController::class, 'mesCommandes'])->name('client.commandes');
+Route::delete('/supprimer-commande/{id}', [ClientController::class, 'supprimerCommande'])->name('client.supprimerCommande');
+
+// Routes pour le panier
+Route::get('/panier', [ClientController::class, 'afficherPanier'])->name('client.panier');
+Route::post('/ajouter-au-panier/{id}', [ClientController::class, 'ajouterAuPanier'])->name('client.ajouterAuPanier');
+Route::delete('/panier/supprimer/{id}', [ClientController::class, 'supprimerDuPanier'])->name('client.panier.supprimer');
 
 require __DIR__.'/auth.php';

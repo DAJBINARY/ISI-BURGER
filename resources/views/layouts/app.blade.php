@@ -32,7 +32,7 @@
                         Se connecter
                     </a>
                 @else
-                    <a href="{{ route('client.catalogue') }}" class="text-gray-300 hover:text-white">Catalogue</a>
+                    <a href="{{ route('burgers.index') }}" class="text-gray-300 hover:text-white">Catalogue</a>
                     <a href="{{ route('gestionnaire.commandes.index') }}" class="text-gray-300 hover:text-white">Gestions commandes</a>
                     <a href="{{ route('admin.statistics') }}" class="text-gray-300 hover:text-white">Voir les statistiques</a>
                     <form method="POST" action="{{ route('logout') }}" class="inline">
