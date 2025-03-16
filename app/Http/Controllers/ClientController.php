@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Commande;
 use App\Models\Burger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
@@ -36,7 +37,7 @@ class ClientController extends Controller
             return redirect()->route('client.catalogue')->with('error', 'Burger introuvable.');
         }
 
-        // Récupérer la quantité envoyée par le formulaire, avec une valeur par défaut de 1 si aucune quantité n'est fournie
+        // Récupérer la quantité envoyée par le formulaire, avec une valeur par défaut de 1
         $quantite = $request->input('quantity', 1);
 
         // Vérifier que la quantité demandée est valide
@@ -49,13 +50,13 @@ class ClientController extends Controller
 
         // Si le burger est déjà dans le panier, incrémenter la quantité
         if (isset($panier[$id])) {
-            $panier[$id]['quantite'] += $quantite; // Ajoute la quantité au panier
+            $panier[$id]['quantite'] += $quantite;
         } else {
             // Sinon, ajouter le burger avec la quantité choisie
             $panier[$id] = [
-                'nom' => $burger->nom,
-                'prix' => $burger->prix,
-                'quantite' => $quantite, // Utiliser la quantité passée par le formulaire
+                'nom'      => $burger->nom,
+                'prix'     => $burger->prix,
+                'quantite' => $quantite,
             ];
         }
 
@@ -65,14 +66,11 @@ class ClientController extends Controller
         return redirect()->route('client.catalogue')->with('success', 'Burger ajouté au panier.');
     }
 
-
     // Afficher le panier
     public function afficherPanier()
     {
         // Récupérer le panier de la session
         $panier = session()->get('panier', []);
-
-        // Afficher la vue du panier avec le panier récupéré
         return view('client.panier', compact('panier'));
     }
 
@@ -84,10 +82,7 @@ class ClientController extends Controller
 
         // Vérifier si l'élément existe dans le panier
         if (isset($panier[$id])) {
-            // Supprimer l'élément du panier
             unset($panier[$id]);
-
-            // Sauvegarder le panier mis à jour dans la session
             session()->put('panier', $panier);
             return redirect()->route('client.panier')->with('success', 'Burger supprimé du panier.');
         }
@@ -98,78 +93,88 @@ class ClientController extends Controller
     // Passer une commande
     public function passerCommande(Request $request)
     {
-        // Validation des données du panier
-        $request->validate([
-            'burgers' => 'required|array',
-            'burgers.*.id' => 'required|exists:burgers,id',
-            'burgers.*.quantity' => 'required|integer|min:1',
-        ]);
+        // Récupérer le panier depuis la session
+        $panier = session()->get('panier', []);
+        if (empty($panier)) {
+            return redirect()->route('client.panier')
+                ->with('error', 'Votre panier est vide.');
+        }
 
-        // Calcul du montant total
         $montantTotal = 0;
-        $burgers = [];
-        foreach ($request->burgers as $burgerData) {
-            $burger = Burger::find($burgerData['id']);  // Recherche du burger dans la base de données
-            if ($burger) {
-                $montantTotal += $burger->prix * $burgerData['quantity'];  // Calcul du montant total
-                $burgers[] = ['id' => $burger->id, 'quantity' => $burgerData['quantity']];  // Ajouter à l'array de burgers
-            }
+        $burgersCommande = [];
+
+        try {
+            // Utiliser une transaction pour éviter les problèmes de concurrence
+            DB::transaction(function () use ($panier, &$montantTotal, &$burgersCommande) {
+                foreach ($panier as $id => $item) {
+                    // Utiliser lockForUpdate pour verrouiller la ligne en base
+                    $burger = Burger::lockForUpdate()->find($id);
+                    if (!$burger) {
+                        throw new \Exception("Le produit $id n'existe pas.");
+                    }
+                    $quantite = isset($item['quantite']) ? (int)$item['quantite'] : 1;
+                    if ($burger->stock < $quantite) {
+                        throw new \Exception("Le burger {$burger->nom} n'a pas suffisamment de stock.");
+                    }
+                    $montantTotal += $burger->prix * $quantite;
+                    $burgersCommande[] = ['burger' => $burger, 'quantity' => $quantite];
+
+                    // Mise à jour du stock
+                    $burger->stock -= $quantite;
+                    $burger->save();
+                }
+
+                // Récupérer l'ID utilisateur depuis la session ou via Auth
+                $userId = session()->get('user_id', null);
+
+                // Création de la commande
+                $commande = Commande::create([
+                    'user_id'       => $userId,
+                    'status'        => 'En attente',
+                    'montant_total' => $montantTotal,
+                    'is_paid'       => false,
+                    'payment_date'  => null,
+                ]);
+
+                // Attacher les burgers à la commande
+                foreach ($burgersCommande as $burgerData) {
+                    $commande->burgers()->attach($burgerData['burger']->id, ['quantity' => $burgerData['quantity']]);
+                }
+
+                // Ajouter la commande à la session pour affichage ultérieur
+                $commandes = session()->get('commandes', []);
+                $commandes[] = $commande;
+                session()->put('commandes', $commandes);
+            });
+        } catch (\Exception $e) {
+            return redirect()->route('client.panier')
+                ->with('error', $e->getMessage());
         }
 
-        // Récupérer l'user_id depuis la session (si disponible)
-        $userId = session()->get('user_id');  // Si vous stockez l'ID de l'utilisateur dans la session
+        // Vider le panier après commande réussie
+        session()->forget('panier');
 
-        // Si aucun utilisateur n'est trouvé dans la session, vous pouvez définir un utilisateur par défaut
-        if (!$userId) {
-            $userId = null;  // Ou, si vous avez un utilisateur "anonyme", vous pouvez lui attribuer un ID par défaut
-        }
-
-        // Créer la commande avec l'user_id de la session (ou un utilisateur par défaut)
-        $commande = Commande::create([
-            'user_id'       => $userId,
-            'status'        => 'En attente',
-            'montant_total' => $montantTotal,
-            'is_paid'       => false,
-            'payment_date'  => null,
-        ]);
-
-
-        // Ajouter les burgers à la commande
-        foreach ($burgers as $burger) {
-            $commande->burgers()->attach($burger['id'], ['quantity' => $burger['quantity']]);
-        }
-
-        // Ajouter la commande à la session
-        $commandes = session()->get('commandes', []);
-        $commandes[] = $commande;
-        session()->put('commandes', $commandes);
-        dd('Commande créée');
-        // Rediriger vers la page des commandes avec un message de succès
-        return redirect()->route('client.commandes')->with('success', 'Commande passée avec succès.');
+        return redirect()->route('client.commandes')
+            ->with('success', 'Commande passée avec succès.');
     }
-
-
 
     // Voir les commandes du client
     public function mesCommandes()
     {
-        // Récupérer les commandes de la session ou un tableau vide si aucune commande n'est présente
+        // Ici, nous récupérons les commandes stockées dans la session.
+        // Pour une application réelle, il serait préférable de les récupérer depuis la base, par exemple :
+        // $commandes = Commande::where('user_id', Auth::id())->get();
         $commandes = session()->get('commandes', []);
-
-        // Passer les commandes à la vue
         return view('client.commandes', compact('commandes'));
     }
+
+    // Afficher un burger (détail)
     public function showBurger($id)
     {
-        // Trouver le burger par son ID
         $burger = Burger::find($id);
-
-        // Si le burger n'existe pas, rediriger vers la page de catalogue avec un message d'erreur
         if (!$burger) {
             return redirect()->route('client.catalogue')->with('error', 'Burger non trouvé.');
         }
-
-        // Passer le burger à la vue
         return view('client.burger', compact('burger'));
     }
 }
