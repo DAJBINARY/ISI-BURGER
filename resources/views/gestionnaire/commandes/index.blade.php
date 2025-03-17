@@ -20,7 +20,7 @@
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="py-4 px-5 text-sm text-gray-700">{{ $commande->id }}</td>
                         <td class="py-4 px-5 text-sm text-gray-700">{{ $commande->user->name }}</td>
-                        <td class="py-4 px-5 text-sm text-gray-700">{{ number_format($commande->montant_total, 2) }} €</td>
+                        <td class="py-4 px-5 text-sm text-gray-700">{{ number_format($commande->montant_total, 2) }} Fcfa</td>
                         <td class="py-4 px-5 text-sm text-gray-700">{{ $commande->status }}</td>
                         <td class="py-4 px-5 text-sm text-gray-700">{{ $commande->created_at->format('d/m/Y') }}</td>
                         <td class="py-4 px-5 text-sm text-gray-700 space-x-2">

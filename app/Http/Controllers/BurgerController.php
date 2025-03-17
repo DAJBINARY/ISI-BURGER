@@ -8,9 +8,25 @@ use Illuminate\Support\Facades\Storage;
 
 class BurgerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $burgers = Burger::all();
+        $query = Burger::query();
+
+        // Filtre par prix
+        if ($request->has('prix') && is_numeric($request->prix)) {
+            $query->where('prix', '<=', $request->prix);
+        }
+
+        // Filtre par libellé (nom) insensible à la casse
+        if ($request->has('libelle')) {
+            $libelle = strtolower($request->libelle); // Convertir en minuscules
+            $query->whereRaw('LOWER(nom) LIKE ?', ['%' . $libelle . '%']);
+        }
+
+        // Récupérer les burgers filtrés
+        $burgers = $query->get();
+
+        // Retourner la vue avec les burgers filtrés
         return view('burgers.index', compact('burgers'));
     }
 

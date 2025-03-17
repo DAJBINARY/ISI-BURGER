@@ -6,6 +6,7 @@ use App\Models\Commande;
 use App\Models\Burger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
@@ -14,14 +15,18 @@ class ClientController extends Controller
     {
         $query = Burger::query();
 
-        // Filtres
+        // Filtre par prix
         if ($request->has('prix') && is_numeric($request->prix)) {
             $query->where('prix', '<=', $request->prix);
         }
+
+        // Filtre par libellé (nom) insensible à la casse
         if ($request->has('libelle')) {
-            $query->where('nom', 'like', '%' . $request->libelle . '%');
+            $libelle = strtolower($request->libelle); // Convertir en minuscules
+            $query->whereRaw('LOWER(nom) LIKE ?', ['%' . $libelle . '%']);
         }
 
+        // Récupérer les burgers filtrés
         $burgers = $query->get();
         return view('client.catalogue', compact('burgers'));
     }
@@ -104,11 +109,11 @@ class ClientController extends Controller
         $burgersCommande = [];
 
         try {
-            // Utiliser une transaction pour éviter les problèmes de concurrence
+            // Utiliser une transaction pour garantir l'intégrité
             DB::transaction(function () use ($panier, &$montantTotal, &$burgersCommande) {
                 foreach ($panier as $id => $item) {
-                    // Utiliser lockForUpdate pour verrouiller la ligne en base
-                    $burger = Burger::lockForUpdate()->find($id);
+                    // Verrouiller le burger pour éviter la concurrence sur le stock
+                    $burger = \App\Models\Burger::lockForUpdate()->find($id);
                     if (!$burger) {
                         throw new \Exception("Le produit $id n'existe pas.");
                     }
@@ -119,16 +124,29 @@ class ClientController extends Controller
                     $montantTotal += $burger->prix * $quantite;
                     $burgersCommande[] = ['burger' => $burger, 'quantity' => $quantite];
 
-                    // Mise à jour du stock
+                    // Mettre à jour le stock
                     $burger->stock -= $quantite;
                     $burger->save();
                 }
 
-                // Récupérer l'ID utilisateur depuis la session ou via Auth
+                // Récupérer l'ID utilisateur depuis la session (null pour commande anonyme)
                 $userId = session()->get('user_id', null);
 
-                // Création de la commande
-                $commande = Commande::create([
+                // Si aucun utilisateur n'est trouvé, créer automatiquement un utilisateur invité
+                if (is_null($userId)) {
+                    $anonymousUser = \App\Models\User::create([
+                        'name'     => "Client " . uniqid(),
+                        'email'    => "client" . uniqid() . "@example.com",
+                        'password' => bcrypt(Str::random(10)),
+                        'role'     => 'client',
+                        'is_client'=> true,
+                    ]);
+                    $userId = $anonymousUser->id;
+                    session()->put('user_id', $userId);
+                }
+
+                // Créer la commande dans la base de données
+                $commande = \App\Models\Commande::create([
                     'user_id'       => $userId,
                     'status'        => 'En attente',
                     'montant_total' => $montantTotal,
@@ -136,17 +154,20 @@ class ClientController extends Controller
                     'payment_date'  => null,
                 ]);
 
-                // Attacher les burgers à la commande
+                // Attacher les burgers à la commande via la table pivot
                 foreach ($burgersCommande as $burgerData) {
-                    $commande->burgers()->attach($burgerData['burger']->id, ['quantity' => $burgerData['quantity']]);
+                    $commande->burgers()->attach($burgerData['burger']->id, [
+                        'quantity' => $burgerData['quantity']
+                    ]);
                 }
 
-                // Ajouter la commande à la session pour affichage ultérieur
+                // En option, enregistrer la commande dans la session pour affichage ultérieur
                 $commandes = session()->get('commandes', []);
                 $commandes[] = $commande;
                 session()->put('commandes', $commandes);
             });
         } catch (\Exception $e) {
+            \Log::error("Erreur lors du passage de commande : " . $e->getMessage());
             return redirect()->route('client.panier')
                 ->with('error', $e->getMessage());
         }
@@ -158,15 +179,16 @@ class ClientController extends Controller
             ->with('success', 'Commande passée avec succès.');
     }
 
+
+
     // Voir les commandes du client
     public function mesCommandes()
     {
-        // Ici, nous récupérons les commandes stockées dans la session.
-        // Pour une application réelle, il serait préférable de les récupérer depuis la base, par exemple :
-        // $commandes = Commande::where('user_id', Auth::id())->get();
-        $commandes = session()->get('commandes', []);
+        $commandes = Commande::where('user_id', session()->get('user_id'))->latest()->get();
+
         return view('client.commandes', compact('commandes'));
     }
+
 
     // Afficher un burger (détail)
     public function showBurger($id)

@@ -1,137 +1,41 @@
 version: '3.8'
 
-networks:
-    my_network:
-
 services:
     app:
-        build: .
-        container_name: laravel_app
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: isi-burger:latest
+        container_name: isi-burger_app
+        restart: always
         ports:
-            - "8000:80"
+            - "8000:8000"
         volumes:
-            - .:/var/www/html
+            - ./:/var/www
         depends_on:
             - db
-        networks:
-            - my_network
+        environment:
+            - APP_ENV=production
+            - APP_DEBUG=false
+            - DB_CONNECTION=pgsql
+            - DB_HOST=db
+            - DB_PORT=5432
+            - DB_DATABASE=isi_burger
+            - DB_USERNAME=postgres
+            - DB_PASSWORD=passer
 
     db:
         image: postgres:latest
-        container_name: postgres_db
+        container_name: isi-burger_db
+        restart: always
+        ports:
+            - "5432:5432"
         environment:
             POSTGRES_DB: isi_burger
-            POSTGRES_USER: laravel
+            POSTGRES_USER: postgres
             POSTGRES_PASSWORD: passer
         volumes:
             - db_data:/var/lib/postgresql/data
-        networks:
-            - my_network
-
-    gitlab:
-        image: gitlab/gitlab-ce:latest
-        container_name: gitlab
-        hostname: gitlab.local
-        ports:
-            - "8080:80"
-            - "443:443"
-            - "22:22"
-        volumes:
-            - gitlab_data:/var/opt/gitlab
-            - gitlab_config:/etc/gitlab
-            - gitlab_logs:/var/log/gitlab
-        restart: always
-        networks:
-            - my_network
-
-    jenkins:
-        image: jenkins/jenkins:lts
-        container_name: jenkins
-        ports:
-            - "8081:8080"
-            - "50000:50000"
-        volumes:
-            - jenkins_home:/var/jenkins_home
-        depends_on:
-            - gitlab
-        networks:
-            - my_network
-
-    sonarqube:
-        image: sonarqube
-        container_name: sonarqube
-        ports:
-            - "9000:9000"
-        depends_on:
-            - jenkins
-        networks:
-            - my_network
-
-    elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
-        container_name: elasticsearch
-        ports:
-            - "9200:9200"
-        environment:
-            - discovery.type=single-node
-        networks:
-            - my_network
-
-    logstash:
-        image: docker.elastic.co/logstash/logstash:7.10.0
-        container_name: logstash
-        ports:
-            - "5044:5044"
-        depends_on:
-            - elasticsearch
-        networks:
-            - my_network
-
-    kibana:
-        image: docker.elastic.co/kibana/kibana:7.10.0
-        container_name: kibana
-        ports:
-            - "5601:5601"
-        depends_on:
-            - elasticsearch
-        networks:
-            - my_network
-
-    selenium-hub:
-        image: selenium/hub
-        container_name: selenium-hub
-        ports:
-            - "4444:4444"
-        networks:
-            - my_network
-
-    selenium-node-chrome:
-        image: selenium/node-chrome
-        container_name: selenium-node-chrome
-        depends_on:
-            - selenium-hub
-        networks:
-            - my_network
-
-    grafana:
-        image: grafana/grafana
-        container_name: grafana
-        ports:
-            - "3000:3000"
-        depends_on:
-            - elasticsearch
-        networks:
-            - my_network
-
-    puppet-server:
-        image: puppet/puppetserver
-        container_name: puppet-server
-        networks:
-            - my_network
 
 volumes:
     db_data:
-    gitlab_data:
-    gitlab_config:
-    gitlab_logs:
-    jenkins_home:

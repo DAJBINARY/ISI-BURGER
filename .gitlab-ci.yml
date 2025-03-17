@@ -1,65 +1,41 @@
 stages:
+  - clone
   - install
-  - test
-  - analysis
   - build
   - deploy
 
 variables:
-  APP_ENV: testing
-  DB_CONNECTION: pgsql
-  DB_HOST: postgres_db
-  DB_PORT: 5432
-  DB_DATABASE: isi_burger
-  DB_USERNAME: laravel
-  DB_PASSWORD: passer
-  SONAR_HOST_URL: "http://sonarqube:9000"
-  SONAR_LOGIN: "your-sonarqube-token"
+  DOCKER_IMAGE: "your-dockerhub-username/laravel-burger-app"
+  DOCKER_TAG: "latest"
 
-services:
-  - name: postgres:latest
-    alias: postgres_db
-    command: [ "postgres", "-c", "fsync=off" ]
-
-before_script:
-  - cp .env.example .env
-  - composer install --prefer-dist --no-interaction
-  - php artisan key:generate
-  - php artisan migrate --force
-  - php artisan config:clear
+clone_repo:
+  stage: clone
+  script:
+    - echo "Cloning repository from GitHub..."
+    - git clone https://github.com/your-github-username/your-repo-name.git -b DIABY_AbdoulJalil_Burger .
+  only:
+    - main
 
 install_dependencies:
   stage: install
   script:
-    - echo "Installation terminée"
+    - echo "Installing Laravel dependencies..."
+    - composer install --prefer-dist --no-progress --no-suggest
+  only:
+    - main
 
-unit_tests:
-  stage: test
-  script:
-    - vendor/bin/phpunit --coverage-clover coverage.xml
-  artifacts:
-    paths:
-      - coverage.xml
-    expire_in: 1 week
-
-sonarqube_analysis:
-  stage: analysis
-  image: sonarsource/sonar-scanner-cli
-  script:
-    - sonar-scanner -Dsonar.projectKey=isi_burger -Dsonar.sources=app -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_LOGIN
-  dependencies:
-    - unit_tests
-
-build_docker:
+build_docker_image:
   stage: build
   script:
-    - docker build -t laravel_app:latest .
+    - echo "Building Docker image..."
+    - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
   only:
     - main
 
 deploy:
   stage: deploy
   script:
-    - echo "Déploiement automatique en cours..."
+    - echo "Deploying application..."
+    # Ajoutez ici les commandes pour déployer votre application (par exemple, sur un serveur ou un cluster Kubernetes)
   only:
     - main

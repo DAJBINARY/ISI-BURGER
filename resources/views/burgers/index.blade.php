@@ -3,7 +3,12 @@
 @section('content')
     <div class="max-w-6xl mx-auto mt-6">
         <h1 class="text-3xl font-bold text-center text-gray-900 dark:text-black mb-6">🍔 Catalogue des Burgers</h1>
-
+        <!-- Bouton Ajouter un Burger -->
+        <div class="flex justify-end mb-4">
+            <a href="{{ route('burgers.create') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow">
+                ➕ Ajouter un Burger
+            </a>
+        </div>
         <!-- Barre de recherche et filtre -->
         <form action="{{ route('burgers.index') }}" method="GET" class="flex flex-wrap justify-center gap-4 mb-6">
             <input type="text" name="libelle" placeholder="Rechercher par nom..." class="w-64 p-2 border rounded-lg shadow-sm focus:ring focus:ring-blue-300">

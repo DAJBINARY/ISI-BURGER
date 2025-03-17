@@ -32,11 +32,6 @@
                     <a href="{{ route('burgers.index') }}" class="btn btn-secondary px-6 py-3 rounded-lg shadow">
                         Retour au catalogue
                     </a>
-                    @if($burger->stock > 0)
-                        <button class="btn btn-primary px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700">
-                            Ajouter au panier 🛒
-                        </button>
-                    @endif
                 </div>
             </div>
         </div>

@@ -11,11 +11,18 @@
             <p class="text-xl mb-6 animate__animated animate__fadeIn animate__delay-1s">
                 Découvre notre catalogue de burgers savoureux.
             </p>
-            <!-- Bouton pour voir le catalogue -->
-            <a href="{{ route('client.catalogue') }}"
-               class="inline-block px-8 py-3 bg-yellow-400 text-gray-800 font-semibold rounded-lg shadow-md transform hover:scale-105 transition-all duration-300 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 animate__animated animate__fadeIn animate__delay-2s">
-                Voir le catalogue
-            </a>
+            <!-- Bouton pour voir le catalogue ou les burgers -->
+            @auth
+                <a href="{{ route('burgers.index') }}"
+                   class="inline-block px-8 py-3 bg-yellow-400 text-gray-800 font-semibold rounded-lg shadow-md transform hover:scale-105 transition-all duration-300 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 animate__animated animate__fadeIn animate__delay-2s">
+                    Voir les burgers
+                </a>
+            @else
+                <a href="{{ route('client.catalogue') }}"
+                   class="inline-block px-8 py-3 bg-yellow-400 text-gray-800 font-semibold rounded-lg shadow-md transform hover:scale-105 transition-all duration-300 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 animate__animated animate__fadeIn animate__delay-2s">
+                    Voir le catalogue
+                </a>
+            @endauth
         </div>
     </div>
 @endsection

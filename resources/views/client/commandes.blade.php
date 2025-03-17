@@ -33,7 +33,7 @@
                         <td class="py-3 px-6 text-gray-800">{{ number_format($commande->montant_total, 2) }} Fcfa</td>
                         <td class="py-3 px-6 text-gray-800">{{ $commande->created_at->format('d/m/Y') }}</td>
                         <td class="py-3 px-6">
-                            <a href="{{ route('commandes.show', $commande) }}" class="text-blue-600 hover:text-blue-800 font-semibold transition-all duration-300">
+                            <a href="{{ route('client.commandes', $commande) }}" class="text-blue-600 hover:text-blue-800 font-semibold transition-all duration-300">
                                 Voir
                             </a>
                         </td>
