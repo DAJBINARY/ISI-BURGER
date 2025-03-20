@@ -14,7 +14,7 @@ pipeline {
             }
         }
 
-        stage('Install Composer') {
+        stage('Install Dependencies') {
             steps {
                 script {
                     // Vérifier si Composer est installé, sinon l'installer
@@ -28,13 +28,6 @@ pipeline {
                         echo "Composer est déjà installé."
                     fi
                     '''
-                }
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                script {
                     // Installer les dépendances Laravel
                     sh 'composer install --no-interaction --prefer-dist --optimize-autoloader'
                     // Copier .env.example vers .env s'il n'existe pas déjà
