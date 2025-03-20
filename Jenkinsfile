@@ -1,8 +1,12 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'composer:latest'  // Image avec PHP et Composer préinstallés
+            args '-u root'  // Exécute en tant que root pour éviter les problèmes de permissions
+        }
+    }
 
     environment {
-        // Nom de l'image Docker à créer
         DOCKER_IMAGE = "DAJBINARY/isi-burger:latest"
     }
 
@@ -16,41 +20,12 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Vérifier et installer PHP si absent
+                    // Vérifier et installer les dépendances Laravel
                     sh '''
-                    if ! command -v php &> /dev/null; then
-                        echo "PHP non trouvé, installation en cours..."
-                        apt-get update && apt-get install -y php-cli php-mbstring unzip curl
-                    else
-                        echo "PHP est déjà installé."
-                    fi
+                    composer install --no-interaction --prefer-dist --optimize-autoloader
+                    if [ ! -f .env ]; then cp .env.example .env; fi
+                    php artisan key:generate
                     '''
-
-                    // Vérifier et installer Composer si absent
-                    sh '''
-                    if ! command -v composer &> /dev/null; then
-                        echo "Composer non trouvé, installation en cours..."
-                        curl -sS https://getcomposer.org/installer | php
-                        mv composer.phar /usr/local/bin/composer
-                    else
-                        echo "Composer est déjà installé."
-                    fi
-                    '''
-
-                    // Installer les dépendances Laravel (ignore l'erreur si une dépendance manque)
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        sh 'composer install --no-interaction --prefer-dist --optimize-autoloader'
-                    }
-
-                    // Copier .env.example vers .env s'il n'existe pas déjà
-                    sh '''
-                    if [ ! -f .env ]; then
-                        cp .env.example .env
-                    fi
-                    '''
-
-                    // Générer la clé d'application Laravel
-                    sh 'php artisan key:generate'
                 }
             }
         }
@@ -66,13 +41,13 @@ pipeline {
 
     post {
         success {
-            echo ' Pipeline terminé avec succès !'
+            echo '✅ Pipeline terminé avec succès !'
         }
         failure {
-            echo ' Le pipeline a échoué.'
+            echo '❌ Le pipeline a échoué.'
         }
         always {
-            echo '  Pipeline terminé.'
+            echo 'ℹ️ Pipeline terminé.'
         }
     }
 }
