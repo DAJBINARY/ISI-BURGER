@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'composer:latest'  // Image avec PHP et Composer préinstallés
+            image 'composer:latest'  // Utilise une image Docker avec PHP et Composer préinstallés
             args '-u root'  // Exécute en tant que root pour éviter les problèmes de permissions
         }
     }
@@ -13,17 +13,23 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                checkout scm  // Récupère le code du référentiel source configuré dans Jenkins
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Vérifier et installer les dépendances Laravel
+                    // Étape d'installation des dépendances de Laravel
+                    echo " Installation des dépendances Laravel..."
                     sh '''
+                    # Installe les dépendances Laravel avec Composer
                     composer install --no-interaction --prefer-dist --optimize-autoloader
+                    
+                    # Copie .env.example vers .env si .env n'existe pas
                     if [ ! -f .env ]; then cp .env.example .env; fi
+                    
+                    # Génère la clé d'application Laravel
                     php artisan key:generate
                     '''
                 }
@@ -33,6 +39,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Étape de construction de l'image Docker
+                    echo "🛠 Construction de l'image Docker..."
                     sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
@@ -41,13 +49,13 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline terminé avec succès !'
+            echo ' Pipeline terminé avec succès !'
         }
         failure {
-            echo '❌ Le pipeline a échoué.'
+            echo 'Le pipeline a échoué.'
         }
         always {
-            echo 'ℹ️ Pipeline terminé.'
+            echo 'ℹPipeline terminé.'
         }
     }
 }
