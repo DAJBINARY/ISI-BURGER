@@ -1,41 +1,39 @@
 pipeline {
-    agent {
-        docker {
-            image 'composer:latest'  // Utilise une image Docker avec PHP et Composer préinstallés
-            args '-u root'  // Exécute en tant que root pour éviter les problèmes de permissions
-        }
-    }
+    agent any
 
     environment {
+        // Nom de l'image Docker à créer
         DOCKER_IMAGE = "DAJBINARY/isi-burger:latest"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm  // Récupère le code du référentiel source configuré dans Jenkins
+                // Utilise le SCM configuré dans Jenkins
+                checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Étape d'installation des dépendances de Laravel
-                    echo " Installation des dépendances Laravel..."
+                    // Vérifier si Composer est installé, sinon l'installer
                     sh '''
-                    # Assurez-vous que les répertoires ont les bonnes permissions
-                    mkdir -p vendor bootstrap/cache
-                    chmod -R 777 vendor bootstrap/cache
-
-                    # Installe les dépendances Laravel avec Composer
-                    composer install --no-interaction --prefer-dist --optimize-autoloader
-                    
-                    # Copie .env.example vers .env si .env n'existe pas
-                    if [ ! -f .env ]; then cp .env.example .env; fi
-                    
-                    # Génère la clé d'application Laravel
-                    php artisan key:generate
+                    if ! command -v composer &> /dev/null
+                    then
+                        echo "Composer non trouvé, installation en cours..."
+                        curl -sS https://getcomposer.org/installer | php
+                        sudo mv composer.phar /usr/local/bin/composer
+                    else
+                        echo "Composer est déjà installé."
+                    fi
                     '''
+                    // Installer les dépendances Laravel
+                    sh 'composer install --no-interaction --prefer-dist --optimize-autoloader'
+                    // Copier .env.example vers .env s'il n'existe pas déjà
+                    sh 'if [ ! -f .env ]; then cp .env.example .env; fi'
+                    // Générer la clé d'application Laravel
+                    sh 'php artisan key:generate'
                 }
             }
         }
@@ -43,9 +41,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Étape de construction de l'image Docker
-                    echo "🛠 Construction de l'image Docker..."
-                    sh "docker build --progress=plain -t ${DOCKER_IMAGE} ."
+                    // Construire l'image Docker du projet
+                    sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
         }
@@ -57,10 +54,9 @@ pipeline {
         }
         failure {
             echo 'Le pipeline a échoué.'
-            sh 'docker system prune -f'  // Nettoyage des ressources Docker
         }
         always {
-            echo 'ℹPipeline terminé.'
+            echo 'Pipeline terminé.'
         }
     }
 }
