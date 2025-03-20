@@ -14,6 +14,24 @@ pipeline {
             }
         }
 
+        stage('Install Composer') {
+            steps {
+                script {
+                    // Vérifier si Composer est installé, sinon l'installer
+                    sh '''
+                    if ! command -v composer &> /dev/null
+                    then
+                        echo "Composer non trouvé, installation en cours..."
+                        curl -sS https://getcomposer.org/installer | php
+                        sudo mv composer.phar /usr/local/bin/composer
+                    else
+                        echo "Composer est déjà installé."
+                    fi
+                    '''
+                }
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
                 script {
