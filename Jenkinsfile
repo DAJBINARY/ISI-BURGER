@@ -23,6 +23,10 @@ pipeline {
                     // Étape d'installation des dépendances de Laravel
                     echo " Installation des dépendances Laravel..."
                     sh '''
+                    # Assurez-vous que les répertoires ont les bonnes permissions
+                    mkdir -p vendor bootstrap/cache
+                    chmod -R 777 vendor bootstrap/cache
+
                     # Installe les dépendances Laravel avec Composer
                     composer install --no-interaction --prefer-dist --optimize-autoloader
                     
@@ -41,7 +45,7 @@ pipeline {
                 script {
                     // Étape de construction de l'image Docker
                     echo "🛠 Construction de l'image Docker..."
-                    sh "docker build -t ${DOCKER_IMAGE} ."
+                    sh "docker build --progress=plain -t ${DOCKER_IMAGE} ."
                 }
             }
         }
@@ -53,6 +57,7 @@ pipeline {
         }
         failure {
             echo 'Le pipeline a échoué.'
+            sh 'docker system prune -f'  // Nettoyage des ressources Docker
         }
         always {
             echo 'ℹPipeline terminé.'
