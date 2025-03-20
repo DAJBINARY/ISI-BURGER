@@ -27,7 +27,6 @@
     </div>
 </nav>
 
-<!-- Ajout de marge pour éviter que le contenu soit caché par la navbar fixe -->
 <div class="container mt-5 pt-4">
 
 </div>

@@ -2,6 +2,19 @@
 
 @section('content')
     <div class="container mx-auto">
+        <!-- Affichage des messages de succès et d'erreur -->
+        @if (session('success'))
+            <div class="bg-green-100 text-green-700 p-4 rounded mb-4">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <h1 class="text-3xl font-bold text-center mb-6">Mon Panier</h1>
 
         @if(session('panier') && count(session('panier')) > 0)
@@ -22,12 +35,10 @@
                             <td class="py-2 px-4">{{ $item['nom'] }}</td>
                             <td class="py-2 px-4">{{ number_format($item['prix'], 2) }} FCFA</td>
                             <td class="py-2 px-4">
-                                <!-- Vérifier si 'quantite' existe avant de l'afficher -->
                                 {{ isset($item['quantite']) ? $item['quantite'] : 0 }}
                             </td>
                             <td class="py-2 px-4">{{ number_format($item['prix'] * (isset($item['quantite']) ? $item['quantite'] : 1), 2) }} FCFA</td>
                             <td class="py-2 px-4">
-                                <!-- Formulaire pour supprimer un item du panier -->
                                 <form action="{{ route('client.panier.supprimer', $id) }}" method="POST" class="inline-block">
                                     @csrf
                                     @method('DELETE')
@@ -43,10 +54,10 @@
                 <div class="mt-6 flex justify-between items-center">
                     <span class="text-xl font-semibold">Total : </span>
                     <span class="text-xl font-semibold">
-                    {{ number_format(array_sum(array_map(function ($item) {
-                        return $item['prix'] * (isset($item['quantite']) ? $item['quantite'] : 1); // Vérification de 'quantite'
-                    }, session('panier'))), 2) }} FCFA
-                </span>
+                        {{ number_format(array_sum(array_map(function ($item) {
+                            return $item['prix'] * (isset($item['quantite']) ? $item['quantite'] : 1);
+                        }, session('panier'))), 2) }} FCFA
+                    </span>
                 </div>
 
                 <!-- Formulaire pour passer la commande -->

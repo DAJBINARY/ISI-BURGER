@@ -10,7 +10,6 @@ use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
-    // Afficher le catalogue des burgers
     public function catalogue(Request $request)
     {
         $query = Burger::query();
@@ -25,24 +24,17 @@ class ClientController extends Controller
             $libelle = strtolower($request->libelle); // Convertir en minuscules
             $query->whereRaw('LOWER(nom) LIKE ?', ['%' . $libelle . '%']);
         }
-
-        // Récupérer les burgers filtrés
         $burgers = $query->get();
         return view('client.catalogue', compact('burgers'));
     }
 
-    // Ajouter un burger au panier
     public function ajouterAuPanier(Request $request, $id)
     {
-        // Récupérer le burger avec l'ID
         $burger = Burger::find($id);
-
         // Vérifier si le burger existe
         if (!$burger) {
             return redirect()->route('client.catalogue')->with('error', 'Burger introuvable.');
         }
-
-        // Récupérer la quantité envoyée par le formulaire, avec une valeur par défaut de 1
         $quantite = $request->input('quantity', 1);
 
         // Vérifier que la quantité demandée est valide
@@ -50,9 +42,7 @@ class ClientController extends Controller
             return redirect()->route('client.catalogue')->with('error', 'Quantité invalide.');
         }
 
-        // Récupérer le panier de la session
         $panier = session()->get('panier', []);
-
         // Si le burger est déjà dans le panier, incrémenter la quantité
         if (isset($panier[$id])) {
             $panier[$id]['quantite'] += $quantite;
@@ -64,25 +54,19 @@ class ClientController extends Controller
                 'quantite' => $quantite,
             ];
         }
-
-        // Sauvegarder le panier mis à jour dans la session
         session()->put('panier', $panier);
 
         return redirect()->route('client.catalogue')->with('success', 'Burger ajouté au panier.');
     }
 
-    // Afficher le panier
     public function afficherPanier()
     {
-        // Récupérer le panier de la session
         $panier = session()->get('panier', []);
         return view('client.panier', compact('panier'));
     }
 
-    // Supprimer un burger du panier
     public function supprimerDuPanier($id)
     {
-        // Récupérer le panier de la session
         $panier = session()->get('panier', []);
 
         // Vérifier si l'élément existe dans le panier
@@ -95,19 +79,15 @@ class ClientController extends Controller
         return redirect()->route('client.panier')->with('error', 'Burger non trouvé dans le panier.');
     }
 
-    // Passer une commande
     public function passerCommande(Request $request)
     {
-        // Récupérer le panier depuis la session
         $panier = session()->get('panier', []);
         if (empty($panier)) {
             return redirect()->route('client.panier')
                 ->with('error', 'Votre panier est vide.');
         }
-
         $montantTotal = 0;
         $burgersCommande = [];
-
         try {
             // Utiliser une transaction pour garantir l'intégrité
             DB::transaction(function () use ($panier, &$montantTotal, &$burgersCommande) {
@@ -124,19 +104,15 @@ class ClientController extends Controller
                     $montantTotal += $burger->prix * $quantite;
                     $burgersCommande[] = ['burger' => $burger, 'quantity' => $quantite];
 
-                    // Mettre à jour le stock
                     $burger->stock -= $quantite;
                     $burger->save();
                 }
 
-                // Récupérer l'ID utilisateur depuis la session (null pour commande anonyme)
                 $userId = session()->get('user_id', null);
-
-                // Si aucun utilisateur n'est trouvé, créer automatiquement un utilisateur invité
                 if (is_null($userId)) {
                     $anonymousUser = \App\Models\User::create([
                         'name'     => "Client " . uniqid(),
-                        'email'    => "client" . uniqid() . "@example.com",
+                        'email'    => "client" . uniqid() . "@isi-burger.com",
                         'password' => bcrypt(Str::random(10)),
                         'role'     => 'client',
                         'is_client'=> true,
@@ -145,7 +121,6 @@ class ClientController extends Controller
                     session()->put('user_id', $userId);
                 }
 
-                // Créer la commande dans la base de données
                 $commande = \App\Models\Commande::create([
                     'user_id'       => $userId,
                     'status'        => 'En attente',
@@ -161,7 +136,6 @@ class ClientController extends Controller
                     ]);
                 }
 
-                // En option, enregistrer la commande dans la session pour affichage ultérieur
                 $commandes = session()->get('commandes', []);
                 $commandes[] = $commande;
                 session()->put('commandes', $commandes);
@@ -171,26 +145,18 @@ class ClientController extends Controller
             return redirect()->route('client.panier')
                 ->with('error', $e->getMessage());
         }
-
-        // Vider le panier après commande réussie
         session()->forget('panier');
 
         return redirect()->route('client.commandes')
             ->with('success', 'Commande passée avec succès.');
     }
 
-
-
-    // Voir les commandes du client
     public function mesCommandes()
     {
         $commandes = Commande::where('user_id', session()->get('user_id'))->latest()->get();
-
         return view('client.commandes', compact('commandes'));
     }
 
-
-    // Afficher un burger (détail)
     public function showBurger($id)
     {
         $burger = Burger::find($id);

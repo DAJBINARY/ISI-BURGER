@@ -2,9 +2,22 @@
 
 @section('content')
     <div class="max-w-4xl mx-auto mt-6 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+        <!-- Affichage des messages de succès et d'erreur -->
+        @if (session('success'))
+            <div class="bg-green-100 text-green-700 p-4 rounded mb-4">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">🛒 Détails de la Commande #{{ $commande->id }}</h1>
 
-        <div class="mb-4">
+        <div class="mb-4 space-y-2">
             <p class="text-lg"><strong class="text-gray-700 dark:text-gray-300">👤 Client :</strong> {{ $commande->user->name }}</p>
             <p class="text-lg"><strong class="text-gray-700 dark:text-gray-300">📌 Statut :</strong>
                 <span class="px-3 py-1 rounded-full text-white
@@ -24,7 +37,7 @@
         <hr class="my-4 border-gray-300 dark:border-gray-600">
 
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">🍔 Burgers commandés :</h2>
-        <ul class="bg-gray-100 dark:bg-gray-700 rounded-lg shadow p-4">
+        <ul class="bg-gray-100 dark:bg-gray-700 rounded-lg shadow p-4 space-y-2">
             @foreach($commande->burgers as $burger)
                 <li class="flex justify-between items-center py-2 border-b last:border-b-0 border-gray-300 dark:border-gray-600">
                     <span class="text-gray-900 dark:text-white font-medium">{{ $burger->nom }}</span>
@@ -42,11 +55,11 @@
                     <option value="Prête" {{ $commande->status == 'Prête' ? 'selected' : '' }}>Prête</option>
                     <option value="Payée" {{ $commande->status == 'Payée' ? 'selected' : '' }}>Payée</option>
                 </select>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow">✅ Mettre à jour</button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-300">✅ Mettre à jour</button>
             </form>
         </div>
 
-        <a href="{{ route('gestionnaire.commandes.index') }}" class="mt-6 inline-block bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow">
+        <a href="{{ route('gestionnaire.commandes.index') }}" class="mt-6 inline-block bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-300">
             ⬅ Retour
         </a>
     </div>

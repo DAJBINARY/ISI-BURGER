@@ -17,21 +17,14 @@ class Commande extends Model
         'payment_date',
     ];
 
-    // Relation avec les burgers
+
     public function burgers()
     {
         return $this->belongsToMany(Burger::class)->withPivot('quantity');
     }
 
-    // Relation avec l'utilisateur
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    // Relation avec les paiements
-    public function payment()
-    {
-        return $this->hasOne(Payment::class);
     }
 }

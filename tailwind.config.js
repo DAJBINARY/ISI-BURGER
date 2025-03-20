@@ -14,6 +14,12 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                brown: {
+                    500: '#6B4F1F',  // Custom Brown Color
+                    700: '#3E2723',  // Darker Brown
+                },
+            },
         },
     },
 

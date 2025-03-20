@@ -2,6 +2,19 @@
 
 @section('content')
     <div class="container mx-auto px-4">
+        <!-- Affichage des messages de succès et d'erreur -->
+        @if (session('success'))
+            <div class="bg-green-100 text-green-700 p-4 rounded mb-4">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <h1 class="text-3xl font-extrabold text-gray-800 mb-6">Gestion des Commandes</h1>
         <div class="overflow-x-auto shadow-lg rounded-lg">
             <table class="min-w-full bg-white">

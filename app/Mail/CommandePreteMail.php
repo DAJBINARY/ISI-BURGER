@@ -37,7 +37,7 @@ class CommandePreteMail extends Mailable
 
         // Attacher le PDF à l'email
         return $this->subject('Votre commande est prête - ISI BURGER')
-            ->view('emails.commande_prete')  // Vue de l'email
+            ->view('emails.commande_prete')
             ->attachData($pdf->output(), 'facture_commande_' . $this->commande->id . '.pdf', [
                 'mime' => 'application/pdf',
             ]);

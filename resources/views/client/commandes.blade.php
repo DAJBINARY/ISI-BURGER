@@ -1,4 +1,5 @@
 @extends('layouts.app')
+
 @if(session('success'))
     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
         {{ session('success') }}
@@ -24,28 +25,24 @@
                 <tbody class="bg-white">
                 @foreach($commandes as $commande)
                     <tr class="border-b hover:bg-gray-50">
-                        <td class="py-3 px-6 text-gray-800">{{ $commande->id }}</td>
-                        <td class="py-3 px-6">
-                                <span class="inline-block px-2 py-1 text-sm font-semibold text-{{ $commande->status == 'completed' ? 'green' : 'yellow' }}-800 bg-{{ $commande->status == 'completed' ? 'green' : 'yellow' }}-200 rounded-full">
-                                    {{ ucfirst($commande->status) }}
-                                </span>
+                        <td class="py-3 px-6 text-left text-gray-800">{{ $commande->id }}</td>
+                        <td class="py-3 px-6 text-left">
+                            <span class="inline-block px-2 py-1 text-sm font-semibold text-{{ $commande->status == 'completed' ? 'green' : 'yellow' }}-800 bg-{{ $commande->status == 'completed' ? 'green' : 'yellow' }}-200 rounded-full">
+                                {{ ucfirst($commande->status) }}
+                            </span>
                         </td>
-                        <td class="py-3 px-6 text-gray-800">{{ number_format($commande->montant_total, 2) }} Fcfa</td>
-                        <td class="py-3 px-6 text-gray-800">{{ $commande->created_at->format('d/m/Y') }}</td>
-                        <td class="py-3 px-6">
-                            <a href="{{ route('client.commandes', $commande) }}" class="text-blue-600 hover:text-blue-800 font-semibold transition-all duration-300">
-                                Voir
+                        <td class="py-3 px-6 text-left text-gray-800">{{ number_format($commande->montant_total, 2) }} Fcfa</td>
+                        <td class="py-3 px-6 text-left text-gray-800">{{ $commande->created_at->format('d/m/Y') }}</td>
+                        <td class="py-3 px-6 text-left">
+                            <!-- Remplacement du bouton "Voir" par "Annulé" -->
+                            <a href="{{ route('client.commandes', $commande) }}" class="text-red-600 hover:text-red-800 font-semibold transition-all duration-300">
+                                Annulé
                             </a>
                         </td>
                     </tr>
                 @endforeach
                 </tbody>
             </table>
-
-            <!-- Pagination -->
-            <div class="mt-4">
-
-            </div>
         </div>
     </div>
 @endsection

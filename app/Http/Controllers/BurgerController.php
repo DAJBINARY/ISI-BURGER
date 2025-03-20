@@ -16,17 +16,12 @@ class BurgerController extends Controller
         if ($request->has('prix') && is_numeric($request->prix)) {
             $query->where('prix', '<=', $request->prix);
         }
-
         // Filtre par libellé (nom) insensible à la casse
         if ($request->has('libelle')) {
-            $libelle = strtolower($request->libelle); // Convertir en minuscules
+            $libelle = strtolower($request->libelle);
             $query->whereRaw('LOWER(nom) LIKE ?', ['%' . $libelle . '%']);
         }
-
-        // Récupérer les burgers filtrés
         $burgers = $query->get();
-
-        // Retourner la vue avec les burgers filtrés
         return view('burgers.index', compact('burgers'));
     }
 
@@ -41,14 +36,12 @@ class BurgerController extends Controller
             'nom' => 'required',
             'prix' => 'required|numeric',
             'description' => 'required',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'stock' => 'required|integer',
         ]);
 
-        // Gestion de l'upload de l'image
         $imagePath = $request->hasFile('image') ? $request->file('image')->store('burgers', 'public') : null;
 
-        // Création du burger
         Burger::create([
             'nom' => $request->nom,
             'prix' => $request->prix,
@@ -82,38 +75,37 @@ class BurgerController extends Controller
 
         // Gestion de la mise à jour de l'image
         if ($request->hasFile('image')) {
-            // Supprimer l'ancienne image si elle existe
             if ($burger->image) {
                 Storage::disk('public')->delete($burger->image);
             }
-
             // Stocker la nouvelle image
             $imagePath = $request->file('image')->store('burgers', 'public');
             $burger->image = $imagePath;
         }
 
-        // Mise à jour des autres champs
         $burger->update([
             'nom' => $request->nom,
             'prix' => $request->prix,
             'description' => $request->description,
-            'image' => $burger->image, // Conserver l'image existante si aucune nouvelle n'est envoyée
+            'image' => $burger->image,
             'stock' => $request->stock,
         ]);
-
         return redirect()->route('burgers.index')->with('success', 'Burger mis à jour avec succès.');
     }
 
     public function destroy(Burger $burger)
     {
-        // Supprimer l'image si elle existe
+        if ($burger->stock > 0) {
+            return redirect()->route('burgers.index')->with('error', 'Impossible de supprimer un burger ayant du stock.');
+        }
+
         if ($burger->image) {
             Storage::disk('public')->delete($burger->image);
         }
 
-        // Supprimer le burger
         $burger->delete();
 
         return redirect()->route('burgers.index')->with('success', 'Burger supprimé avec succès.');
     }
+
 }

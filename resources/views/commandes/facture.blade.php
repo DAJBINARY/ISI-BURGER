@@ -23,7 +23,7 @@
 
     <!-- Informations client -->
     <div class="mb-6">
-        <h3 class="text-lg font-semibold text-gray-700">🧑 Client :</h3>
+        <h3 class="text-lg font-semibold text-gray-700">Client :</h3>
         <p class="text-gray-800">{{ $commande->user->name }}</p>
         <p class="text-gray-600">{{ $commande->user->email }}</p>
     </div>
@@ -56,7 +56,6 @@
         <span class="text-blue-600">{{ number_format($commande->montant_total, 2) }} Fcfa</span>
     </div>
 
-    <!-- Remerciement -->
     <p class="mt-6 text-center text-gray-600">Merci pour votre commande chez ISI BURGER ! 🍔</p>
 </div>
 </body>

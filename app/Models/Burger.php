@@ -17,7 +17,6 @@ class Burger extends Model
         'stock',
     ];
 
-    // Relation avec les commandes
     public function commandes()
     {
         return $this->belongsToMany(Commande::class)->withPivot('quantity');

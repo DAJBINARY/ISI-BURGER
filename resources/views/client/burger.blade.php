@@ -31,16 +31,16 @@
                 <form action="{{ route('client.ajouterAuPanier', $burger->id) }}" method="POST" class="mt-6">
                     @csrf
                     <div class="mb-3">
-                        <label for="quantity" class="form-label text-lg font-semibold">Quantité</label>
-                        <input type="number" name="quantity" id="quantity" class="form-control w-24 text-center" value="1" min="1" max="{{ $burger->stock }}">
+                        <label for="quantity" class="text-lg font-semibold">Quantité</label>
+                        <input type="number" name="quantity" id="quantity" class="w-24 text-center border-2 border-gray-300 rounded-lg py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-green-500" value="1" min="1" max="{{ $burger->stock }}">
                     </div>
-                    <button type="submit" class="btn btn-primary px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700">
+                    <button type="submit" class="w-full py-3 mt-4 bg-yellow-500 text-gray-900 font-semibold rounded-lg shadow-lg transform transition-all duration-300 hover:bg-yellow-600 focus:outline-none focus:ring-4 focus:ring-yellow-300 hover:scale-105">
                         Ajouter au Panier 🛒
                     </button>
                 </form>
 
                 <!-- Bouton retour -->
-                <a href="{{ route('client.catalogue') }}" class="btn btn-secondary mt-4 px-6 py-3 rounded-lg shadow">
+                <a href="{{ route('client.catalogue') }}" class="mt-4 block w-full text-center py-3 bg-gray-800 text-white font-semibold rounded-lg shadow-lg transform transition-all duration-300 hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 hover:scale-105">
                     Retour au catalogue
                 </a>
             </div>
