@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Nom de l'image Docker à créer
         DOCKER_IMAGE = "DAJBINARY/isi-burger:latest"
     }
 
@@ -17,23 +16,14 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Vérifier si Composer est installé, sinon l'installer
-                    sh '''
-                    if ! command -v composer &> /dev/null
-                    then
-                        echo "Composer non trouvé, installation en cours..."
-                        curl -sS https://getcomposer.org/installer | php
-                        sudo mv composer.phar /usr/local/bin/composer
-                    else
-                        echo "Composer est déjà installé."
-                    fi
-                    '''
-                    // Installer les dépendances Laravel
-                    sh 'composer install --no-interaction --prefer-dist --optimize-autoloader'
+                    // Utilisation de Composer et PHP directement depuis le conteneur
+                    sh 'docker exec jenkins /bin/bash -c "composer install --no-interaction --prefer-dist --optimize-autoloader"'
+
                     // Copier .env.example vers .env s'il n'existe pas déjà
-                    sh 'if [ ! -f .env ]; then cp .env.example .env; fi'
+                    sh 'docker exec jenkins /bin/bash -c "if [ ! -f .env ]; then cp .env.example .env; fi"'
+
                     // Générer la clé d'application Laravel
-                    sh 'php artisan key:generate'
+                    sh 'docker exec jenkins /bin/bash -c "php artisan key:generate"'
                 }
             }
         }
