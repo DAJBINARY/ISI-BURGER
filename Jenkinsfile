@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
+        // Nom de l'image Docker à créer
         DOCKER_IMAGE = "DAJBINARY/isi-burger:latest"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Utilise le SCM configuré dans Jenkins
                 checkout scm
             }
         }
@@ -16,14 +16,17 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Utilisation de Composer et PHP directement depuis le conteneur
-                    sh 'docker exec jenkins /bin/bash -c "composer install --no-interaction --prefer-dist --optimize-autoloader"'
+                    // Installer les dépendances Laravel directement dans le conteneur Jenkins
+                    sh '''
+                    # Exécuter Composer dans le conteneur Jenkins (en utilisant Docker monté)
+                    docker exec jenkins /bin/bash -c "composer install --no-interaction --prefer-dist --optimize-autoloader"
 
-                    // Copier .env.example vers .env s'il n'existe pas déjà
-                    sh 'docker exec jenkins /bin/bash -c "if [ ! -f .env ]; then cp .env.example .env; fi"'
+                    # Copier .env.example vers .env s'il n'existe pas déjà
+                    docker exec jenkins /bin/bash -c "if [ ! -f /var/jenkins_home/workspace/ISI-Burger/.env ]; then cp /var/jenkins_home/workspace/ISI-Burger/.env.example /var/jenkins_home/workspace/ISI-Burger/.env; fi"
 
-                    // Générer la clé d'application Laravel
-                    sh 'docker exec jenkins /bin/bash -c "php artisan key:generate"'
+                    # Générer la clé d'application Laravel
+                    docker exec jenkins /bin/bash -c "php /var/jenkins_home/workspace/ISI-Burger/artisan key:generate"
+                    '''
                 }
             }
         }
