@@ -1,10 +1,10 @@
-# Utilise l'image officielle de Jenkins LTS
+# Utiliser l'image officielle de Jenkins LTS
 FROM jenkins/jenkins:lts
 
 # Passer à l'utilisateur root pour effectuer les installations
 USER root
 
-# Mettre à jour et installer Docker et Composer
+# Mettre à jour et installer Docker, PHP, Composer, et autres dépendances nécessaires
 RUN apt-get update && \
     apt-get install -y \
     curl \
@@ -13,7 +13,16 @@ RUN apt-get update && \
     php-mbstring \
     php-xml \
     php-json \
-    docker.io && \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    sudo && \
+    # Ajouter Docker repository et installer Docker
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/trusted.gpg.d/docker.asc && \
+    echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list && \
+    apt-get update && \
+    apt-get install -y docker-ce && \
+    # Installer Composer
     curl -sS https://getcomposer.org/installer | php && \
     mv composer.phar /usr/local/bin/composer
 

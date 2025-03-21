@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Nom de l'image Docker à créer
         DOCKER_IMAGE = "DAJBINARY/isi-burger:latest"
     }
 
@@ -16,17 +15,14 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Installer les dépendances Laravel directement dans le conteneur Jenkins
-                    sh '''
-                    # Exécuter Composer dans le conteneur Jenkins (en utilisant Docker monté)
-                    docker exec jenkins /bin/bash -c "composer install --no-interaction --prefer-dist --optimize-autoloader"
+                    // Exécuter Composer dans le conteneur Jenkins (en utilisant Docker monté)
+                    sh 'docker exec jenkins-with-php-composer-container /bin/bash -c "composer install --no-interaction --prefer-dist --optimize-autoloader"'
 
-                    # Copier .env.example vers .env s'il n'existe pas déjà
-                    docker exec jenkins /bin/bash -c "if [ ! -f /var/jenkins_home/workspace/ISI-Burger/.env ]; then cp /var/jenkins_home/workspace/ISI-Burger/.env.example /var/jenkins_home/workspace/ISI-Burger/.env; fi"
+                    // Copier .env.example vers .env s'il n'existe pas déjà
+                    sh 'docker exec jenkins-with-php-composer-container /bin/bash -c "if [ ! -f /var/jenkins_home/workspace/ISI-Burger/.env ]; then cp /var/jenkins_home/workspace/ISI-Burger/.env.example /var/jenkins_home/workspace/ISI-Burger/.env; fi"'
 
-                    # Générer la clé d'application Laravel
-                    docker exec jenkins /bin/bash -c "php /var/jenkins_home/workspace/ISI-Burger/artisan key:generate"
-                    '''
+                    // Générer la clé d'application Laravel
+                    sh 'docker exec jenkins-with-php-composer-container /bin/bash -c "php /var/jenkins_home/workspace/ISI-Burger/artisan key:generate"'
                 }
             }
         }
@@ -34,7 +30,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Construire l'image Docker du projet
                     sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
